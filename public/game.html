@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Idle Dragon Mining Empire</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:linear-gradient(135deg,#1a0a2e 0%,#16213e 50%,#0f3460 100%);color:#e0e0e0;min-height:100vh;overflow-x:hidden}
+
+/* ── Game Container ── */
+.game-container{max-width:1200px;margin:0 auto;padding:10px;animation:pageLoad .6s cubic-bezier(.16,1,.3,1) forwards}
+@keyframes pageLoad{0%{opacity:0}100%{opacity:1}}
+
+/* ── Top Bar ── */
+.top-bar{display:flex;justify-content:space-between;align-items:center;padding:8px 15px;background:rgba(0,0,0,.3);border-radius:10px;margin-bottom:10px;animation:slideDown .4s cubic-bezier(.16,1,.3,1)}
+@keyframes slideDown{0%{opacity:0;transform:translateY(-15px)}100%{opacity:1;transform:translateY(0)}}
+.user-info{display:flex;align-items:center;gap:10px;font-size:13px}
+.user-info .avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#ff6b35,#f7c948);display:flex;align-items:center;justify-content:center;font-size:16px;animation:avatarSpin 20s linear infinite}
+@keyframes avatarSpin{0%{filter:hue-rotate(0deg)}100%{filter:hue-rotate(360deg)}}
+.user-info .name{color:#f7c948;font-weight:700}
+.user-info .status{color:#8f8;font-size:10px;animation:statusPulse 2s ease-in-out infinite}
+@keyframes statusPulse{0%,100%{opacity:1}50%{opacity:.5}}
+.top-actions{display:flex;gap:8px}
+.btn-sm{padding:6px 14px;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:11px;transition:all .25s cubic-bezier(.16,1,.3,1)}
+.btn-sm:hover{transform:translateY(-2px)}
+.btn-sm:active{transform:scale(.95)}
+.btn-save{background:rgba(68,204,68,.2);color:#6c6;border:1px solid rgba(68,204,68,.3)}
+.btn-save:hover{background:rgba(68,204,68,.3);box-shadow:0 4px 12px rgba(68,204,68,.2)}
+.btn-logout{background:rgba(255,68,68,.15);color:#f66;border:1px solid rgba(255,68,68,.2)}
+.btn-logout:hover{background:rgba(255,68,68,.25);box-shadow:0 4px 12px rgba(255,68,68,.2)}
+.btn-leader{background:rgba(247,201,72,.15);color:#f7c948;border:1px solid rgba(247,201,72,.2)}
+.btn-leader:hover{background:rgba(247,201,72,.25);box-shadow:0 4px 12px rgba(247,201,72,.2)}
+.save-indicator{font-size:10px;color:#888}
+
+/* ── Header ── */
+.header{text-align:center;padding:12px;background:linear-gradient(90deg,#ff6b35,#f7c948,#ff6b35);background-size:200% auto;border-radius:12px;margin-bottom:12px;animation:headerSlide .5s .1s both,headerShimmer 4s linear infinite}
+@keyframes headerSlide{0%{opacity:0;transform:translateY(-10px) scale(.98)}100%{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes headerShimmer{0%{background-position:0% center}100%{background-position:200% center}}
+.header h1{font-size:24px;color:#1a0a2e;text-shadow:0 2px 4px rgba(0,0,0,.2);letter-spacing:2px}
+.header .subtitle{color:#2d1b4e;font-size:12px}
+
+/* ── Resources ── */
+.resources-bar{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:12px;animation:fadeIn .5s .2s both}
+@keyframes fadeIn{0%{opacity:0}100%{opacity:1}}
+.resource{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:6px 14px;display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;backdrop-filter:blur(10px);transition:all .3s cubic-bezier(.16,1,.3,1)}
+.resource:hover{transform:translateY(-2px);background:rgba(255,255,255,.12);box-shadow:0 4px 15px rgba(0,0,0,.2)}
+.resource .icon{font-size:18px;animation:iconBob 3s ease-in-out infinite}
+@keyframes iconBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+.resource .val{color:#f7c948;transition:all .2s}
+.resource .val.pulse{animation:valPulse .3s}
+@keyframes valPulse{0%{transform:scale(1)}50%{transform:scale(1.15);color:#ffdd44}100%{transform:scale(1)}}
+.resource .rate{font-size:10px;color:#8f8;font-weight:400}
+
+/* ── Tabs ── */
+.tabs{display:flex;gap:4px;margin-bottom:12px;flex-wrap:wrap;animation:fadeIn .5s .25s both}
+.tab{padding:9px 18px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:8px 8px 0 0;cursor:pointer;font-size:12px;transition:all .25s cubic-bezier(.16,1,.3,1);font-weight:600;user-select:none;position:relative;overflow:hidden}
+.tab:hover{background:rgba(255,255,255,.12);transform:translateY(-2px)}
+.tab.active{background:rgba(255,107,53,.25);border-color:#ff6b35;color:#ff6b35;animation:tabActivate .3s cubic-bezier(.16,1,.3,1)}
+@keyframes tabActivate{0%{transform:scale(.96)}50%{transform:scale(1.02)}100%{transform:scale(1)}}
+.tab::after{content:'';position:absolute;bottom:0;left:50%;width:0;height:2px;background:#ff6b35;transition:all .3s;transform:translateX(-50%)}
+.tab.active::after{width:80%}
+.tab-content{display:none;background:rgba(0,0,0,.25);border-radius:0 12px 12px 12px;padding:18px;min-height:380px;border:1px solid rgba(255,255,255,.06)}
+.tab-content.active{display:block;animation:tabContentFade .35s cubic-bezier(.16,1,.3,1)}
+@keyframes tabContentFade{0%{opacity:0;transform:translateY(8px)}100%{opacity:1;transform:translateY(0)}}
+
+/* ── Mine ── */
+.mine-area{text-align:center}
+.mine-btn{width:150px;height:150px;border-radius:50%;border:4px solid #f7c948;background:radial-gradient(circle at 35% 35%,#8B6914,#5a3a08);cursor:pointer;font-size:56px;display:flex;align-items:center;justify-content:center;margin:12px auto;transition:transform .1s,box-shadow .2s;box-shadow:0 0 30px rgba(247,201,72,.3);user-select:none;position:relative;animation:mineIdle 4s ease-in-out infinite}
+@keyframes mineIdle{0%,100%{box-shadow:0 0 30px rgba(247,201,72,.3)}50%{box-shadow:0 0 50px rgba(247,201,72,.5),0 0 80px rgba(247,201,72,.15)}}
+.mine-btn:hover{transform:scale(1.08);box-shadow:0 0 60px rgba(247,201,72,.6)}
+.mine-btn:active{transform:scale(.88);animation:none}
+.click-text{position:absolute;font-size:16px;font-weight:700;color:#f7c948;pointer-events:none;animation:floatUp .8s ease-out forwards;z-index:10;text-shadow:0 0 10px rgba(247,201,72,.5)}
+@keyframes floatUp{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-60px) scale(.7)}}
+
+/* ── Gold sparkle particles on click ── */
+.sparkle{position:absolute;pointer-events:none;z-index:5}
+.sparkle-dot{position:absolute;width:4px;height:4px;border-radius:50%;animation:sparkleOut .6s ease-out forwards}
+@keyframes sparkleOut{0%{opacity:1;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(var(--sx),var(--sy)) scale(0)}}
+
+.mine-stats{display:flex;gap:12px;justify-content:center;margin-top:12px;flex-wrap:wrap}
+.mine-stat{background:rgba(255,255,255,.05);padding:6px 12px;border-radius:6px;font-size:11px;transition:all .2s}
+.mine-stat:hover{background:rgba(255,255,255,.1);transform:scale(1.05)}
+.mine-stat span{color:#f7c948;font-weight:700}
+
+/* ── Section Titles ── */
+.section-title{font-size:16px;color:#f7c948;margin-bottom:10px;border-bottom:1px solid rgba(247,201,72,.2);padding-bottom:5px;animation:fadeIn .4s both}
+
+/* ── Cards ── */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
+.card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:12px;transition:all .25s cubic-bezier(.16,1,.3,1);position:relative;overflow:hidden;animation:cardAppear .4s cubic-bezier(.16,1,.3,1) both}
+@keyframes cardAppear{0%{opacity:0;transform:translateY(15px) scale(.95)}100%{opacity:1;transform:translateY(0) scale(1)}}
+.card::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.04),transparent);transition:left .5s}
+.card:hover::before{left:100%}
+.card:hover{background:rgba(255,255,255,.1);transform:translateY(-4px);box-shadow:0 8px 25px rgba(0,0,0,.4)}
+.card .card-icon{font-size:36px;text-align:center;margin-bottom:6px;transition:transform .3s cubic-bezier(.16,1,.3,1)}
+.card:hover .card-icon{transform:scale(1.15) rotate(-5deg)}
+.card .card-name{font-size:13px;font-weight:700;text-align:center;margin-bottom:3px}
+.card .card-desc{font-size:10px;color:#999;text-align:center;margin-bottom:6px}
+.card .card-stats{font-size:10px;display:flex;justify-content:space-between;align-items:center}
+.card .card-stats .price{color:#f7c948;font-weight:700}
+.card .card-stats .owned{color:#8f8}
+.card.locked{opacity:.45;pointer-events:none}
+
+/* ── Element colors with glow ── */
+.card.element-fire{border-color:#ff4444;background:rgba(255,68,68,.06)}.card.element-fire:hover{box-shadow:0 8px 25px rgba(255,68,68,.15)}
+.card.element-water{border-color:#4488ff;background:rgba(68,136,255,.06)}.card.element-water:hover{box-shadow:0 8px 25px rgba(68,136,255,.15)}
+.card.element-earth{border-color:#88aa44;background:rgba(136,170,68,.06)}.card.element-earth:hover{box-shadow:0 8px 25px rgba(136,170,68,.15)}
+.card.element-nature{border-color:#44cc44;background:rgba(68,204,68,.06)}.card.element-nature:hover{box-shadow:0 8px 25px rgba(68,204,68,.15)}
+.card.element-electric{border-color:#ffcc00;background:rgba(255,204,0,.06)}.card.element-electric:hover{box-shadow:0 8px 25px rgba(255,204,0,.15)}
+.card.element-ice{border-color:#88ddff;background:rgba(136,221,255,.06)}.card.element-ice:hover{box-shadow:0 8px 25px rgba(136,221,255,.15)}
+.card.element-dark{border-color:#8844cc;background:rgba(136,68,204,.06)}.card.element-dark:hover{box-shadow:0 8px 25px rgba(136,68,204,.15)}
+.card.element-legendary{border-color:#ff8800;background:rgba(255,136,0,.1)}.card.element-legendary:hover{box-shadow:0 8px 30px rgba(255,136,0,.2)}
+.card.element-wind{border-color:#66ccaa;background:rgba(102,204,170,.06)}.card.element-wind:hover{box-shadow:0 8px 25px rgba(102,204,170,.15)}
+.card.element-poison{border-color:#44dd66;background:rgba(68,221,102,.06)}.card.element-poison:hover{box-shadow:0 8px 25px rgba(68,221,102,.15)}
+.card.element-light{border-color:#ffdd44;background:rgba(255,221,68,.06)}.card.element-light:hover{box-shadow:0 8px 25px rgba(255,221,68,.15)}
+.card.element-crystal{border-color:#cc88ff;background:rgba(204,136,255,.06)}.card.element-crystal:hover{box-shadow:0 8px 25px rgba(204,136,255,.15)}
+
+/* ── Buttons ── */
+.btn{padding:9px 18px;border:none;border-radius:8px;cursor:pointer;font-weight:700;font-size:12px;transition:all .25s cubic-bezier(.16,1,.3,1);display:inline-flex;align-items:center;gap:5px;position:relative;overflow:hidden}
+.btn::after{content:'';position:absolute;top:50%;left:50%;width:0;height:0;background:rgba(255,255,255,.2);border-radius:50%;transform:translate(-50%,-50%);transition:width .4s,height .4s,opacity .4s;opacity:0}
+.btn:active::after{width:200px;height:200px;opacity:1;transition:0s}
+.btn-primary{background:linear-gradient(135deg,#ff6b35,#f7c948);color:#1a0a2e}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 4px 15px rgba(255,107,53,.4)}
+.btn-primary:disabled{opacity:.35;cursor:not-allowed;transform:none}
+.btn-primary:disabled:hover{box-shadow:none}
+.btn-secondary{background:rgba(255,255,255,.08);color:#e0e0e0;border:1px solid rgba(255,255,255,.15)}
+.btn-secondary:hover{background:rgba(255,255,255,.15);transform:translateY(-1px)}
+
+/* ── Breeding ── */
+.breeding-area{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
+.breeding-slots{flex:1;min-width:260px}
+.breeding-result{flex:1;min-width:260px;text-align:center}
+.slot{background:rgba(255,255,255,.03);border:2px dashed rgba(255,255,255,.12);border-radius:10px;padding:16px;min-height:80px;display:flex;align-items:center;justify-content:center;margin-bottom:8px;transition:all .3s cubic-bezier(.16,1,.3,1);cursor:pointer;font-size:12px;color:#777}
+.slot:hover{border-color:rgba(247,201,72,.3);background:rgba(247,201,72,.03);transform:scale(1.02)}
+.slot.filled{border-style:solid;border-color:#f7c948;background:rgba(247,201,72,.06);animation:slotFill .4s cubic-bezier(.16,1,.3,1)}
+@keyframes slotFill{0%{transform:scale(.95);border-color:rgba(247,201,72,.1)}50%{transform:scale(1.02)}100%{transform:scale(1);border-color:#f7c948}}
+.slot .slot-icon{font-size:28px;margin-right:8px;transition:transform .2s}
+.slot.filled .slot-icon{animation:slotIconPop .4s cubic-bezier(.16,1,.3,1)}
+@keyframes slotIconPop{0%{transform:scale(0) rotate(-20deg)}60%{transform:scale(1.2) rotate(5deg)}100%{transform:scale(1) rotate(0)}}
+.breed-egg{width:100px;height:130px;background:radial-gradient(ellipse at 50% 40%,#f7c948,#cc8800);border-radius:50% 50% 50% 50%/60% 60% 40% 40%;margin:16px auto;display:flex;align-items:center;justify-content:center;font-size:44px;animation:hatch 2s ease-in-out infinite alternate;box-shadow:0 0 25px rgba(247,201,72,.4),0 0 50px rgba(247,201,72,.15)}
+@keyframes hatch{0%{transform:scale(1) rotate(-3deg);box-shadow:0 0 25px rgba(247,201,72,.4)}100%{transform:scale(1.05) rotate(3deg);box-shadow:0 0 40px rgba(247,201,72,.6),0 0 60px rgba(247,201,72,.2)}}
+
+/* ── Upgrades ── */
+.upgrade-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+.upgrade-card{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:14px;display:flex;gap:10px;align-items:center;transition:all .25s cubic-bezier(.16,1,.3,1);animation:cardAppear .4s cubic-bezier(.16,1,.3,1) both}
+.upgrade-card:hover{background:rgba(255,255,255,.09);transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.2)}
+.upgrade-card .upgrade-icon{font-size:32px;transition:transform .3s}
+.upgrade-card:hover .upgrade-icon{transform:scale(1.1) rotate(-5deg)}
+.upgrade-card .upgrade-info{flex:1}
+.upgrade-card .upgrade-name{font-size:13px;font-weight:700}
+.upgrade-card .upgrade-desc{font-size:10px;color:#aaa;margin-top:2px}
+.upgrade-card .upgrade-level{font-size:10px;color:#f7c948;margin-top:3px}
+.progress-bar{width:100%;height:5px;background:rgba(255,255,255,.08);border-radius:3px;margin-top:5px;overflow:hidden}
+.progress-bar .fill{height:100%;border-radius:3px;transition:width .4s cubic-bezier(.16,1,.3,1)}
+.fill-gold{background:linear-gradient(90deg,#f7c948,#ff6b35)}
+.fill-blue{background:linear-gradient(90deg,#4488ff,#88ddff)}
+
+/* ── Notifications ── */
+.notification{position:fixed;top:15px;right:15px;background:rgba(0,0,0,.9);border:1px solid #f7c948;border-radius:8px;padding:10px 16px;z-index:1000;animation:notifIn .4s cubic-bezier(.16,1,.3,1);font-size:12px;max-width:280px;box-shadow:0 8px 30px rgba(0,0,0,.4)}
+@keyframes notifIn{0%{transform:translateX(120%);opacity:0}100%{transform:translateX(0);opacity:1}}
+
+/* ── Modal ── */
+.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.7);z-index:999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(5px);animation:overlayFade .3s ease-out}
+@keyframes overlayFade{0%{opacity:0}100%{opacity:1}}
+.modal{background:linear-gradient(135deg,#2d1b4e,#16213e);border:1px solid rgba(247,201,72,.3);border-radius:14px;padding:25px;max-width:400px;width:90%;text-align:center;animation:modalPop .4s cubic-bezier(.16,1,.3,1)}
+@keyframes modalPop{0%{transform:scale(.7) translateY(20px);opacity:0}100%{transform:scale(1) translateY(0);opacity:1}}
+.modal h2{color:#f7c948;margin-bottom:8px;font-size:18px}
+.modal p{color:#ccc;margin-bottom:12px;font-size:12px}
+.modal .modal-emoji{font-size:50px;margin-bottom:8px;animation:modalEmojiBounce .5s .2s cubic-bezier(.16,1,.3,1)}
+@keyframes modalEmojiBounce{0%{transform:scale(0)}60%{transform:scale(1.3)}100%{transform:scale(1)}}
+
+/* ── Stats ── */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px}
+.stat-box{background:rgba(255,255,255,.05);border-radius:8px;padding:12px;text-align:center;transition:all .25s;animation:cardAppear .4s cubic-bezier(.16,1,.3,1) both}
+.stat-box:hover{background:rgba(255,255,255,.09);transform:translateY(-2px)}
+.stat-box .stat-val{font-size:22px;font-weight:700;color:#f7c948}
+.stat-box .stat-label{font-size:10px;color:#aaa;margin-top:3px}
+
+/* ── Leaderboard ── */
+.leaderboard-table{width:100%;border-collapse:collapse;font-size:12px}
+.leaderboard-table th{padding:8px;text-align:left;color:#f7c948;border-bottom:1px solid rgba(247,201,72,.2);font-size:11px}
+.leaderboard-table td{padding:8px;border-bottom:1px solid rgba(255,255,255,.05);transition:background .2s}
+.leaderboard-table tr{transition:all .2s}
+.leaderboard-table tr:hover td{background:rgba(255,255,255,.05)}
+.leaderboard-table tr:hover{transform:translateX(3px)}
+.rank-1{color:#ffd700;font-weight:700;animation:rankGlow 2s ease-in-out infinite}
+.rank-2{color:#c0c0c0;font-weight:700}
+.rank-3{color:#cd7f32;font-weight:700}
+@keyframes rankGlow{0%,100%{text-shadow:0 0 5px rgba(255,215,0,.3)}50%{text-shadow:0 0 15px rgba(255,215,0,.6)}}
+
+/* ── Dragon Collection ── */
+.dragon-collection{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.dragon-card{background:rgba(255,255,255,.04);border-radius:8px;padding:8px;text-align:center;border:1px solid rgba(255,255,255,.06);transition:all .25s cubic-bezier(.16,1,.3,1);animation:cardAppear .4s cubic-bezier(.16,1,.3,1) both}
+.dragon-card:hover{background:rgba(255,255,255,.1);transform:translateY(-3px) scale(1.03);box-shadow:0 6px 20px rgba(0,0,0,.3)}
+.dragon-card .dragon-emoji{font-size:30px;transition:transform .3s}
+.dragon-card:hover .dragon-emoji{transform:scale(1.2) rotate(-8deg)}
+.dragon-card .dragon-name{font-size:10px;font-weight:700;margin-top:3px}
+.dragon-card .dragon-element{font-size:9px;color:#aaa;margin-top:1px}
+.dragon-card .dragon-count{font-size:9px;color:#f7c948;margin-top:1px}
+
+/* ── Footer ── */
+.footer{text-align:center;padding:15px;color:#444;font-size:10px;margin-top:15px}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:rgba(0,0,0,.2)}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:3px;transition:background .2s}
+::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.2)}
+
+/* ── Responsive ── */
+@media(max-width:768px){.header h1{font-size:18px}.resource{padding:5px 10px;font-size:11px}.tab{padding:7px 12px;font-size:11px}.grid{grid-template-columns:1fr}.mine-btn{width:110px;height:110px;font-size:40px}.top-bar{flex-direction:column;gap:8px}}
+</style>
+</head>
+<body>
+<div class="game-container">
+  <div class="top-bar" id="topBar">
+    <div class="user-info">
+      <div class="avatar" id="userAvatar">🐉</div>
+      <div>
+        <div class="name" id="userName">Loading...</div>
+        <div class="status" id="userStatus">Online</div>
+      </div>
+    </div>
+    <div class="top-actions">
+      <span class="save-indicator" id="saveIndicator"></span>
+      <button class="btn-sm btn-save" onclick="saveGame()">💾 Lưu</button>
+      <button class="btn-sm btn-leader" onclick="showLeaderboard()">🏆 BXH</button>
+      <button class="btn-sm btn-logout" onclick="logout()">🚪 Đăng xuất</button>
+    </div>
+  </div>
+  <div class="header">
+    <h1>⛏️ Idle Dragon Mining Empire 🐉</h1>
+    <div class="subtitle">Mine resources • Hatch dragons • Build your empire</div>
+  </div>
+  <div class="resources-bar" id="resourcesBar"></div>
+  <div class="tabs">
+    <div class="tab active" data-tab="mine">⛏️ Mine</div>
+    <div class="tab" data-tab="dragons">🐉 Dragons</div>
+    <div class="tab" data-tab="breed">🥚 Breed</div>
+    <div class="tab" data-tab="upgrades">⬆️ Upgrades</div>
+    <div class="tab" data-tab="stats">📊 Stats</div>
+  </div>
+  <div class="tab-content active" id="tab-mine"></div>
+  <div class="tab-content" id="tab-dragons"></div>
+  <div class="tab-content" id="tab-breed"></div>
+  <div class="tab-content" id="tab-upgrades"></div>
+  <div class="tab-content" id="tab-stats"></div>
+  <div class="footer">Idle Dragon Mining Empire v2.0 — Database powered • Auto-save every 30s</div>
+</div>
+
+<script>
+const API='';
+const ELEMENTS={fire:{name:'Fire',color:'#ff4444',emoji:'🔥'},water:{name:'Water',color:'#4488ff',emoji:'💧'},earth:{name:'Earth',color:'#88aa44',emoji:'🪨'},nature:{name:'Nature',color:'#44cc44',emoji:'🌿'},electric:{name:'Electric',color:'#ffcc00',emoji:'⚡'},ice:{name:'Ice',color:'#88ddff',emoji:'❄️'},dark:{name:'Dark',color:'#8844cc',emoji:'🌑'},legendary:{name:'Legendary',color:'#ff8800',emoji:'✨'},wind:{name:'Wind',color:'#66ccaa',emoji:'🌪️'},poison:{name:'Poison',color:'#44dd66',emoji:'☠️'},light:{name:'Light',color:'#ffdd44',emoji:'☀️'},crystal:{name:'Crystal',color:'#cc88ff',emoji:'💎'}};
+const DRAGONS=[
+  {id:'flame',name:'Flame Dragon',emoji:'🐲',element:'fire',baseCost:50,costMul:1.15,gps:1,desc:'A fiery dragon'},
+  {id:'aqua',name:'Aqua Dragon',emoji:'🐉',element:'water',baseCost:120,costMul:1.15,gps:3,desc:'Loves deep waters'},
+  {id:'rocky',name:'Rocky Dragon',emoji:'🦎',element:'earth',baseCost:300,costMul:1.15,gps:8,desc:'Hard as stone'},
+  {id:'leafy',name:'Leafy Dragon',emoji:'🌿',element:'nature',baseCost:800,costMul:1.15,gps:20,desc:'Forest guardian'},
+  {id:'breeze',name:'Breeze Dragon',emoji:'🌬️',element:'wind',baseCost:1500,costMul:1.15,gps:35,desc:'Whispers of the sky'},
+  {id:'sparky',name:'Sparky Dragon',emoji:'⚡',element:'electric',baseCost:2000,costMul:1.15,gps:50,desc:'Crackling with energy'},
+  {id:'venom',name:'Venom Dragon',emoji:'🐍',element:'poison',baseCost:3500,costMul:1.15,gps:90,desc:'Deadly toxic breath'},
+  {id:'frosty',name:'Frost Dragon',emoji:'❄️',element:'ice',baseCost:5000,costMul:1.15,gps:130,desc:'Frozen breath'},
+  {id:'shadow',name:'Shadow Dragon',emoji:'🦇',element:'dark',baseCost:15000,costMul:1.15,gps:350,desc:'Born from darkness'},
+  {id:'phoenix',name:'Phoenix Dragon',emoji:'🦅',element:'fire',baseCost:40000,costMul:1.15,gps:900,desc:'Reborn from ashes'},
+  {id:'thunder',name:'Thunder Dragon',emoji:'🌩️',element:'electric',baseCost:80000,costMul:1.15,gps:2000,desc:'Storm incarnate'},
+  {id:'kraken',name:'Kraken Dragon',emoji:'🐙',element:'water',baseCost:100000,costMul:1.15,gps:2500,desc:'Terror of the deep'},
+  {id:'crystal',name:'Crystal Dragon',emoji:'💎',element:'crystal',baseCost:200000,costMul:1.15,gps:5000,desc:'Shimmering gem scales'},
+  {id:'ancient',name:'Ancient Dragon',emoji:'🦖',element:'earth',baseCost:300000,costMul:1.15,gps:7000,desc:'From a forgotten age'},
+  {id:'zephyr',name:'Zephyr Dragon',emoji:'🌪️',element:'wind',baseCost:500000,costMul:1.15,gps:12000,desc:'Ruler of the winds'},
+  {id:'toxic',name:'Toxic Dragon',emoji:'☠️',element:'poison',baseCost:700000,costMul:1.15,gps:17000,desc:'Plague bringer'},
+  {id:'celestial',name:'Celestial Dragon',emoji:'🌟',element:'legendary',baseCost:1000000,costMul:1.15,gps:20000,desc:'Touched by the stars'},
+  {id:'radiant',name:'Radiant Dragon',emoji:'☀️',element:'light',baseCost:1500000,costMul:1.15,gps:35000,desc:'Pure light incarnate'},
+  {id:'void',name:'Void Dragon',emoji:'🕳️',element:'dark',baseCost:3000000,costMul:1.15,gps:60000,desc:'Consumes all light'},
+  {id:'cosmic',name:'Cosmic Dragon',emoji:'🪐',element:'legendary',baseCost:6000000,costMul:1.15,gps:130000,desc:'Born from stardust'},
+  {id:'divine',name:'Divine Dragon',emoji:'👑',element:'light',baseCost:15000000,costMul:1.15,gps:350000,desc:'Blessed by the heavens'},
+  {id:'eternal',name:'Eternal Dragon',emoji:'♾️',element:'legendary',baseCost:50000000,costMul:1.15,gps:1000000,desc:'Beyond time itself'}
+];
+const BREED_RECIPES=[
+  {parents:['flame','aqua'],result:'steam',name:'Steam Dragon',emoji:'♨️',element:'water',gps:5,chance:.7,desc:'Born from fire and water'},
+  {parents:['flame','rocky'],result:'lava',name:'Lava Dragon',emoji:'🌋',element:'fire',gps:12,chance:.6,desc:'Molten core dragon'},
+  {parents:['aqua','rocky'],result:'mud',name:'Mud Dragon',emoji:'🟤',element:'earth',gps:10,chance:.65,desc:'Swamp guardian'},
+  {parents:['leafy','aqua'],result:'coral',name:'Coral Dragon',emoji:'🪸',element:'water',gps:25,chance:.55,desc:'Ocean reef dweller'},
+  {parents:['flame','leafy'],result:'forestfire',name:'Forest Fire Dragon',emoji:'🔥',element:'fire',gps:30,chance:.5,desc:'Destructive beauty'},
+  {parents:['flame','breeze'],result:'magma',name:'Magma Dragon',emoji:'🌋',element:'fire',gps:60,chance:.5,desc:'Winds fan the flames'},
+  {parents:['aqua','breeze'],result:'tsunami',name:'Tsunami Dragon',emoji:'🌊',element:'water',gps:55,chance:.5,desc:'Ocean storm master'},
+  {parents:['rocky','breeze'],result:'sandstorm',name:'Sandstorm Dragon',emoji:'🏜️',element:'earth',gps:65,chance:.45,desc:'Desert wind fury'},
+  {parents:['leafy','venom'],result:'jungle',name:'Jungle Dragon',emoji:'🌴',element:'nature',gps:150,chance:.4,desc:'Lethal paradise'},
+  {parents:['venom','aqua'],result:'plague',name:'Plague Dragon',emoji:'🧪',element:'poison',gps:180,chance:.35,desc:'Pestilent waters'},
+  {parents:['sparky','frosty'],result:'storm',name:'Storm Dragon',emoji:'🌩️',element:'electric',gps:200,chance:.4,desc:'Rides the thunder'},
+  {parents:['frosty','breeze'],result:'blizzard',name:'Blizzard Dragon',emoji:'🌨️',element:'ice',gps:250,chance:.35,desc:'Frozen hurricane'},
+  {parents:['shadow','phoenix'],result:'darkphoenix',name:'Dark Phoenix',emoji:'🖤',element:'dark',gps:1500,chance:.3,desc:'Fallen from grace'},
+  {parents:['sparky','crystal'],result:'tesla',name:'Tesla Dragon',emoji:'🔌',element:'electric',gps:4000,chance:.3,desc:'Crystal amplifier'},
+  {parents:['crystal','ancient'],result:'geode',name:'Geode Dragon',emoji:'🔮',element:'crystal',gps:12000,chance:.25,desc:'Precious core'},
+  {parents:['breeze','radiant'],result:'aurora',name:'Aurora Dragon',emoji:'🌈',element:'light',gps:8000,chance:.3,desc:'Northern lights spirit'},
+  {parents:['kraken','ancient'],result:'leviathan',name:'Leviathan',emoji:'🐉',element:'water',gps:15000,chance:.25,desc:'World serpent'},
+  {parents:['zephyr','toxic'],result:'miasma',name:'Miasma Dragon',emoji:'☠️',element:'poison',gps:25000,chance:.2,desc:'Toxic atmosphere'},
+  {parents:['crystal','celestial'],result:'prism',name:'Prism Dragon',emoji:'🌈',element:'crystal',gps:40000,chance:.15,desc:'Refracts starlight'},
+  {parents:['radiant','void'],result:'twilight',name:'Twilight Dragon',emoji:'🌅',element:'legendary',gps:80000,chance:.15,desc:'Balance of light and dark'},
+  {parents:['cosmic','crystal'],result:'nebula',name:'Nebula Dragon',emoji:'🌌',element:'legendary',gps:150000,chance:.12,desc:'Stardust crystal form'},
+  {parents:['celestial','void'],result:'omni',name:'Omni Dragon',emoji:'💫',element:'legendary',gps:100000,chance:.1,desc:'Master of all elements'},
+  {parents:['divine','eternal'],result:'infinity',name:'Infinity Dragon',emoji:'∞',element:'legendary',gps:500000,chance:.05,desc:'Unlimited power'}
+];
+const UPGRADES=[
+  {id:'pickaxe',name:'Better Pickaxe',emoji:'⛏️',desc:'Click power +1',baseCost:100,costMul:1.8,maxLevel:50,effect:'clickPower'},
+  {id:'miners',name:'Hire Miners',emoji:'👷',desc:'Idle mining +1/s',baseCost:200,costMul:1.6,maxLevel:50,effect:'idleMine'},
+  {id:'depth',name:'Dig Deeper',emoji:'🕳️',desc:'Depth +1 (x1.2 income)',baseCost:1000,costMul:2.5,maxLevel:20,effect:'depthMul'},
+  {id:'treasure',name:'Treasure Sense',emoji:'💎',desc:'Gem chance +5%',baseCost:3000,costMul:2.2,maxLevel:10,effect:'gemChance'},
+  {id:'hatchery',name:'Hatchery Speed',emoji:'🥚',desc:'Breed time -10%',baseCost:5000,costMul:2.0,maxLevel:10,effect:'hatchSpeed'},
+  {id:'dragonluck',name:'Dragon Luck',emoji:'🍀',desc:'Breed success +5%',baseCost:8000,costMul:2.5,maxLevel:10,effect:'breedLuck'},
+  {id:'goldentouch',name:'Golden Touch',emoji:'✋',desc:'Click power x1.5',baseCost:15000,costMul:3.0,maxLevel:20,effect:'clickMul'},
+  {id:'automine',name:'Auto Miner',emoji:'🤖',desc:'Auto-click 1/s per level',baseCost:25000,costMul:2.0,maxLevel:20,effect:'autoClick'},
+  {id:'dragonmastery',name:'Dragon Mastery',emoji:'🐉',desc:'All dragon GPS +20%',baseCost:50000,costMul:3.5,maxLevel:15,effect:'dragonMul'},
+  {id:'gemagnet',name:'Gem Magnet',emoji:'🧲',desc:'+1 gem per find',baseCost:80000,costMul:2.8,maxLevel:10,effect:'gemAmount'},
+  {id:'offlineking',name:'Offline King',emoji:'👑',desc:'Offline earnings +10%',baseCost:120000,costMul:2.5,maxLevel:10,effect:'offlineMul'},
+  {id:'timewarp',name:'Time Warp',emoji:'⏳',desc:'Game speed +10%',baseCost:200000,costMul:4.0,maxLevel:5,effect:'gameSpeed'},
+  {id:'dragonwhisperer',name:'Dragon Whisperer',emoji:'🗣️',desc:'Dragon cost -5%',baseCost:500000,costMul:3.0,maxLevel:10,effect:'costReduction'},
+  {id:'cosmicforge',name:'Cosmic Forge',emoji:'🔨',desc:'Click power +50',baseCost:1000000,costMul:2.2,maxLevel:30,effect:'clickPowerBig'},
+  {id:'infinitemine',name:'Infinite Mine',emoji:'♾️',desc:'Idle +100/s per level',baseCost:5000000,costMul:2.0,maxLevel:20,effect:'idleMineBig'}
+];
+
+let state={gold:10,gems:0,totalGold:0,totalClicks:0,clickPower:1,clickMul:1,idleMine:0,depthLevel:0,depthMul:1,hatchSpeedLevel:0,gemChance:.02,gemBonus:0,breedLuck:0,dragonMul:1,autoClickRate:0,offlineMultiplier:.5,gameSpeed:1,costReduction:0,dragons:{},customDragons:{},upgradeLevels:{},breeding:null,breedStartTime:0,lastTick:Date.now(),breedParent1:null,breedParent2:null};
+let authToken=null;
+let currentUser=null;
+let activeTab='mine';
+
+// ─── AUTH ───
+(function initAuth(){
+  authToken=localStorage.getItem('dgm_token');
+  currentUser=JSON.parse(localStorage.getItem('dgm_user')||'null');
+  if(!authToken||!currentUser){window.location.href='/';return}
+  document.getElementById('userName').textContent=currentUser.display_name||currentUser.username;
+  loadFromServer();
+})();
+
+function logout(){
+  localStorage.removeItem('dgm_token');
+  localStorage.removeItem('dgm_user');
+  window.location.href='/';
+}
+
+function authFetch(url,opts={}){
+  opts.headers=opts.headers||{};
+  opts.headers['Authorization']='Bearer '+authToken;
+  opts.headers['Content-Type']=opts.headers['Content-Type']||'application/json';
+  return fetch(url,opts);
+}
+
+// ─── SERVER LOAD/SAVE ───
+async function loadFromServer(){
+  try{
+    const res=await authFetch(API+'/api/load');
+    const data=await res.json();
+    if(data.exists){
+      state.gold=data.data.gold;
+      state.gems=data.data.gems;
+      state.totalGold=data.data.totalGold;
+      state.totalClicks=data.data.totalClicks;
+      state.clickPower=data.data.clickPower;
+      state.idleMine=data.data.idleMine;
+      state.depthLevel=data.data.depthLevel;
+      state.depthMul=data.data.depthMul;
+      state.hatchSpeedLevel=data.data.hatchSpeedLevel;
+      state.gemChance=data.data.gemChance;
+      state.breedLuck=data.data.breedLuck;
+      state.dragons=data.data.dragons;
+      state.customDragons=data.data.customDragons;
+      state.upgradeLevels=data.data.upgradeLevels;
+      state.breedParent1=data.data.breedParent1;
+      state.breedParent2=data.data.breedParent2;
+      state.breedStartTime=data.data.breedStartTime;
+      if(data.data.lastTick){
+        let offlineSec=(Date.now()-new Date(data.data.lastTick+'Z').getTime())/1000;
+        if(offlineSec>10){
+          let earned=getTotalGPS()*offlineSec*state.offlineMultiplier;
+          state.gold+=earned;
+          state.totalGold+=earned;
+          showModal('💰','Chào mừng trở lại!',`Bạn offline ${fmt(offlineSec)}s và kiếm được <strong>${fmt(earned)} gold</strong>!`,'Thu thập!');
+        }
+      }
+      applyAllUpgrades();
+      notify('☁️ Đã tải dữ liệu từ server!');
+    } else {
+      state.lastTick=Date.now();
+      saveGame();
+    }
+  }catch(e){
+    console.error('Load error:',e);
+    notify('⚠️ Không thể tải từ server, chơi offline');
+  }
+  renderAll();
+}
+
+async function saveGame(){
+  try{
+    state.lastTick=Date.now();
+    const res=await authFetch(API+'/api/save',{
+      method:'POST',
+      body:JSON.stringify(state)
+    });
+    const data=await res.json();
+    if(data.success){
+      document.getElementById('saveIndicator').textContent='✅ Đã lưu '+new Date().toLocaleTimeString();
+      setTimeout(()=>{document.getElementById('saveIndicator').textContent=''},3000);
+    }
+  }catch(e){
+    console.error('Save error:',e);
+    document.getElementById('saveIndicator').textContent='❌ Lưu thất bại';
+  }
+}
+
+// ─── HELPERS ───
+function fmt(n){if(n>=1e12)return(n/1e12).toFixed(1)+'T';if(n>=1e9)return(n/1e9).toFixed(1)+'B';if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=1e3)return(n/1e3).toFixed(1)+'K';return Math.floor(n).toString()}
+function getDragonCost(d){let o=state.dragons[d.id]||0;let base=Math.floor(d.baseCost*Math.pow(d.costMul,o));return Math.max(1,Math.floor(base*(1-state.costReduction)))}
+function getUpgradeCost(u){let l=state.upgradeLevels[u.id]||0;return Math.floor(u.baseCost*Math.pow(u.costMul,l))}
+function getTotalGPS(){let g=0;for(let d of DRAGONS)g+=(state.dragons[d.id]||0)*d.gps;for(let k in state.customDragons){let c=state.customDragons[k];g+=(c.count||0)*c.gps}g+=state.idleMine;return g*state.depthMul*state.dragonMul}
+function getAllDragons(){let a=[...DRAGONS];for(let k in state.customDragons){let c=state.customDragons[k];a.push({id:k,name:c.name,emoji:c.emoji,element:c.element,gps:c.gps,desc:c.desc,custom:true})}return a}
+function getTotalDragons(){let t=0;for(let k in state.dragons)t+=state.dragons[k];for(let k in state.customDragons)t+=(state.customDragons[k].count||0);return t}
+function notify(m){let e=document.createElement('div');e.className='notification';e.innerHTML=m;document.body.appendChild(e);setTimeout(()=>{e.style.opacity='0';e.style.transition='opacity .3s';setTimeout(()=>e.remove(),300)},2500)}
+function showModal(emoji,title,desc,btn,cb){let o=document.createElement('div');o.className='modal-overlay';o.innerHTML=`<div class="modal"><div class="modal-emoji">${emoji}</div><h2>${title}</h2><p>${desc}</p><button class="btn btn-primary" id="modalBtn">${btn}</button></div>`;document.body.appendChild(o);document.getElementById('modalBtn').onclick=()=>{o.remove();if(cb)cb()};o.onclick=e=>{if(e.target===o){o.remove();if(cb)cb()}}}
+
+// ─── RENDER ───
+function renderResources(){
+  let gps=getTotalGPS();
+  document.getElementById('resourcesBar').innerHTML=`
+    <div class="resource"><span class="icon">💰</span><span class="val">${fmt(state.gold)}</span><span class="rate">(+${fmt(gps)}/s)</span></div>
+    <div class="resource"><span class="icon">💎</span><span class="val">${fmt(state.gems)}</span></div>
+    <div class="resource"><span class="icon">⛏️</span>Click: <span class="val">${fmt(state.clickPower*state.clickMul*state.depthMul)}</span></div>
+    <div class="resource"><span class="icon">🐉</span><span class="val">${getTotalDragons()}</span></div>`;
+}
+function renderMine(){
+  let autoClickInfo=state.autoClickRate>0?`<div class="mine-stat">Auto: <span>${state.autoClickRate}/s</span></div>`:'';
+  let dragonMulInfo=state.dragonMul>1?`<div class="mine-stat">Dragon x<span>${state.dragonMul.toFixed(1)}</span></div>`:'';
+  let h=`<div class="mine-area"><h3 class="section-title">⛏️ Mine Resources</h3><p style="font-size:11px;color:#777;margin-bottom:8px">Click the ore to mine gold!</p><div style="position:relative;display:inline-block"><div class="mine-btn" id="mineBtn" onclick="doMine(event)">💎</div></div><div class="mine-stats"><div class="mine-stat">Depth: <span>Lv.${state.depthLevel}</span></div><div class="mine-stat">Miners: <span>${state.idleMine}/s</span></div>${autoClickInfo}${dragonMulInfo}<div class="mine-stat">Clicks: <span>${fmt(state.totalClicks)}</span></div><div class="mine-stat">Total: <span>${fmt(state.totalGold)}</span></div></div><div style="margin-top:16px"><h3 class="section-title">🏗️ Mine Shafts</h3><div id="shaftViz" style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:8px"></div></div></div>`;
+  document.getElementById('tab-mine').innerHTML=h;
+  renderShafts();
+}
+function renderShafts(){
+  let el=document.getElementById('shaftViz');if(!el)return;
+  let s=Math.min(20,Math.floor(state.depthLevel/2)+1),m=Math.min(20,state.idleMine),h='';
+  for(let i=0;i<s;i++){let hm=i<m;h+=`<div style="width:44px;height:52px;background:${hm?'rgba(247,201,72,.15)':'rgba(255,255,255,.03)'};border:1px solid ${hm?'#f7c948':'rgba(255,255,255,.08)'};border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:20px">${hm?'👷':'🕳️'}</div>`}
+  el.innerHTML=h;
+}
+function renderDragons(){
+  let a=getAllDragons(),h=`<h3 class="section-title">🐉 Dragon Collection (${getTotalDragons()} total)</h3><p style="font-size:11px;color:#777;margin-bottom:10px">Buy dragons to generate passive gold</p><div class="grid">`;
+  for(let d of a){
+    let o=d.custom?(state.customDragons[d.id]?.count||0):(state.dragons[d.id]||0),c=d.custom?null:getDragonCost(d),ca=d.custom?true:state.gold>=c,ec='element-'+d.element,ei=ELEMENTS[d.element];
+    h+=`<div class="card ${ec}"><div class="card-icon">${d.emoji}</div><div class="card-name">${d.name}</div><div class="card-desc">${ei?.emoji||''} ${ei?.name||''} | ${d.desc}</div><div class="card-stats"><span class="owned">Owned: ${o}</span><span>+${fmt(d.gps*state.depthMul)}/s</span></div>${d.custom?`<div style="margin-top:6px;text-align:center"><span style="color:#8f8;font-size:10px">Bred</span></div>`:`<div style="margin-top:6px;text-align:center"><button class="btn btn-primary btn-sm" ${ca?'':'disabled'} onclick="buyDragon('${d.id}')">Buy 💰${fmt(c)}</button></div>`}</div>`;
+  }
+  h+='</div>';
+  document.getElementById('tab-dragons').innerHTML=h;
+}
+function renderBreed(){
+  let h=`<h3 class="section-title">🥚 Dragon Breeding Lab</h3><p style="font-size:11px;color:#777;margin-bottom:10px">Combine two dragons to create a new species!</p><div class="breeding-area"><div class="breeding-slots"><h4 style="margin-bottom:6px;color:#f7c948;font-size:13px">Select Parents</h4><div class="slot ${state.breedParent1?'filled':''}" onclick="openBreedSelect(1)">${state.breedParent1?`<span class="slot-icon">${state.breedParent1.emoji}</span><span>${state.breedParent1.name}</span>`:'<span>Click to select Parent 1</span>'}</div><div style="text-align:center;font-size:20px;margin:4px 0">+</div><div class="slot ${state.breedParent2?'filled':''}" onclick="openBreedSelect(2)">${state.breedParent2?`<span class="slot-icon">${state.breedParent2.emoji}</span><span>${state.breedParent2.name}</span>`:'<span>Click to select Parent 2</span>'}</div><div style="margin-top:10px;text-align:center"><button class="btn btn-primary" ${state.breedParent1&&state.breedParent2&&!state.breeding?'':'disabled'} onclick="startBreed()">🥚 Breed (5s)</button><button class="btn btn-secondary" style="margin-left:6px;font-size:11px" onclick="clearBreedSlots()">Clear</button></div></div><div class="breeding-result"><h4 style="margin-bottom:6px;color:#f7c948;font-size:13px">Result</h4>${state.breeding?renderBreedProgress():'<div style="color:#555;padding:25px;font-size:12px">Select parents and breed!</div>'}</div></div><div style="margin-top:16px"><h4 style="margin-bottom:6px;color:#f7c948;font-size:13px">📖 Known Recipes</h4><div class="grid">`;
+  for(let r of BREED_RECIPES){
+    let p1=DRAGONS.find(d=>d.id===r.parents[0]),p2=DRAGONS.find(d=>d.id===r.parents[1]);
+    if(!p1||!p2)continue;let disc=state.customDragons[r.result];
+    h+=`<div class="card element-${r.element}" style="padding:8px"><div style="font-size:11px;text-align:center">${p1.emoji} + ${p2.emoji} = ${disc?r.emoji:'❓'}</div><div style="font-size:10px;text-align:center;color:#aaa;margin-top:3px">${disc?r.name:'???'} (${Math.round((r.chance+state.breedLuck)*100)}%)</div></div>`;
+  }
+  h+='</div></div>';
+  document.getElementById('tab-breed').innerHTML=h;
+  if(state.breeding)updateBreedProgress();
+}
+function renderBreedProgress(){
+  let e=(Date.now()-state.breedStartTime)/1000,t=5*(1-state.hatchSpeedLevel*.1),p=Math.min(100,(e/t)*100);
+  if(p>=100)return'<div class="breed-egg" style="animation:none">✨</div><p style="color:#f7c948;font-weight:700;font-size:13px">Ready!</p><button class="btn btn-primary" style="margin-top:8px" onclick="revealBreed()">🎉 Reveal!</button>';
+  return`<div class="breed-egg"></div><p style="color:#aaa;font-size:11px;margin-top:8px">Hatching... ${Math.floor(p)}%</p><div class="progress-bar"><div class="fill fill-gold" style="width:${p}%"></div></div>`;
+}
+function updateBreedProgress(){if(!state.breeding)return;let e=(Date.now()-state.breedStartTime)/1000,t=5*(1-state.hatchSpeedLevel*.1);if(e>=t)renderBreed();else requestAnimationFrame(()=>setTimeout(()=>renderBreed(),200))}
+function renderUpgrades(){
+  let h=`<h3 class="section-title">⬆️ Upgrades</h3><p style="font-size:11px;color:#777;margin-bottom:10px">Improve your mining empire</p><div class="upgrade-grid">`;
+  for(let u of UPGRADES){
+    let l=state.upgradeLevels[u.id]||0,c=getUpgradeCost(u),ca=state.gold>=c,mx=l>=u.maxLevel;
+    h+=`<div class="upgrade-card"><div class="upgrade-icon">${u.emoji}</div><div class="upgrade-info"><div class="upgrade-name">${u.name}</div><div class="upgrade-desc">${u.desc}</div><div class="upgrade-level">Lv.${l}/${u.maxLevel}</div><div class="progress-bar"><div class="fill fill-blue" style="width:${(l/u.maxLevel)*100}%"></div></div></div><div>${mx?'<span style="color:#8f8;font-size:11px">MAX</span>':`<button class="btn btn-primary" style="padding:6px 12px;font-size:11px" ${ca?'':'disabled'} onclick="buyUpgrade('${u.id}')">💰${fmt(c)}</button>`}</div></div>`;
+  }
+  h+='</div>';
+  document.getElementById('tab-upgrades').innerHTML=h;
+}
+function renderStats(){
+  let a=getAllDragons(),bc=Object.keys(state.customDragons).length;
+  let h=`<h3 class="section-title">📊 Statistics</h3><div class="stats-grid"><div class="stat-box"><div class="stat-val">${fmt(state.totalGold)}</div><div class="stat-label">Total Gold</div></div><div class="stat-box"><div class="stat-val">${fmt(state.totalClicks)}</div><div class="stat-label">Total Clicks</div></div><div class="stat-box"><div class="stat-val">${fmt(getTotalGPS())}</div><div class="stat-label">Gold/sec</div></div><div class="stat-box"><div class="stat-val">${fmt(state.clickPower*state.depthMul)}</div><div class="stat-label">Click Power</div></div><div class="stat-box"><div class="stat-val">${getTotalDragons()}</div><div class="stat-label">Total Dragons</div></div><div class="stat-box"><div class="stat-val">${bc}</div><div class="stat-label">Bred Species</div></div></div><div style="margin-top:16px"><h4 style="margin-bottom:6px;color:#f7c948;font-size:13px">🐉 Dragon Breakdown</h4><div class="dragon-collection">`;
+  for(let d of a){let c=d.custom?(state.customDragons[d.id]?.count||0):(state.dragons[d.id]||0);if(!c)continue;h+=`<div class="dragon-card"><div class="dragon-emoji">${d.emoji}</div><div class="dragon-name">${d.name}</div><div class="dragon-element">${ELEMENTS[d.element]?.emoji||''} ${ELEMENTS[d.element]?.name||''}</div><div class="dragon-count">x${c} (${fmt(d.gps*c*state.depthMul)}/s)</div></div>`}
+  h+=`</div></div>`;
+  document.getElementById('tab-stats').innerHTML=h;
+}
+function renderAll(){renderResources();renderMine();renderDragons();renderBreed();renderUpgrades();renderStats()}
+
+// ─── ACTIONS ───
+function doMine(e){
+  let earned=state.clickPower*state.clickMul*state.depthMul;
+  state.gold+=earned;state.totalGold+=earned;state.totalClicks++;
+  if(Math.random()<state.gemChance){let amt=1+state.gemBonus;state.gems+=amt;notify('💎 Found '+amt+' gem'+(amt>1?'s':'')+'!')}
+  let rect=e.target.getBoundingClientRect(),x=e.clientX-rect.left,y=e.clientY-rect.top;
+  let t=document.createElement('span');t.className='click-text';t.textContent='+'+fmt(earned);t.style.left=x+'px';t.style.top=y+'px';
+  e.target.parentElement.appendChild(t);setTimeout(()=>t.remove(),800);
+  const sparkle=document.createElement('div');sparkle.className='sparkle';sparkle.style.left=x+'px';sparkle.style.top=y+'px';
+  const colors=['#f7c948','#ff6b35','#ffdd44','#fff','#ffaa00'];
+  for(let i=0;i<8;i++){
+    const dot=document.createElement('div');dot.className='sparkle-dot';
+    const angle=(i/8)*Math.PI*2+Math.random()*.5;const dist=30+Math.random()*40;
+    dot.style.setProperty('--sx',Math.cos(angle)*dist+'px');dot.style.setProperty('--sy',Math.sin(angle)*dist+'px');
+    dot.style.background=colors[Math.floor(Math.random()*colors.length)];sparkle.appendChild(dot);
+  }
+  e.target.parentElement.appendChild(sparkle);setTimeout(()=>sparkle.remove(),600);
+  renderResources();
+}
+function buyDragon(id){
+  let d=DRAGONS.find(x=>x.id===id);if(!d)return;let c=getDragonCost(d);if(state.gold<c)return;
+  state.gold-=c;state.dragons[id]=(state.dragons[id]||0)+1;notify(`${d.emoji} Bought ${d.name}!`);renderResources();renderDragons();
+}
+function buyUpgrade(id){
+  let u=UPGRADES.find(x=>x.id===id);if(!u)return;let c=getUpgradeCost(u);if(state.gold<c)return;
+  let l=state.upgradeLevels[id]||0;if(l>=u.maxLevel)return;state.gold-=c;state.upgradeLevels[id]=l+1;
+  applyUpgrade(u);notify(`⬆️ ${u.name} → Lv.${l+1}!`);renderResources();renderUpgrades();
+}
+function applyUpgrade(u){
+  let l=state.upgradeLevels[u.id]||0;
+  switch(u.effect){
+    case'clickPower':state.clickPower=1+l;break;
+    case'idleMine':state.idleMine=l;break;
+    case'depthMul':state.depthLevel=l;state.depthMul=Math.pow(1.2,l);break;
+    case'hatchSpeed':state.hatchSpeedLevel=l;break;
+    case'gemChance':state.gemChance=.02+l*.05;break;
+    case'breedLuck':state.breedLuck=l*.05;break;
+    case'clickMul':state.clickMul=Math.pow(1.5,l);break;
+    case'autoClick':state.autoClickRate=l;break;
+    case'dragonMul':state.dragonMul=1+l*.2;break;
+    case'gemAmount':state.gemBonus=l;break;
+    case'offlineMul':state.offlineMultiplier=.5+l*.1;break;
+    case'gameSpeed':state.gameSpeed=1+l*.1;break;
+    case'costReduction':state.costReduction=l*.05;break;
+    case'clickPowerBig':state.clickPower=(state.clickPower||1)+l*50;break;
+    case'idleMineBig':state.idleMine=(state.idleMine||0)+l*100;break;
+  }
+}
+function applyAllUpgrades(){
+  // Reset all computed values first to avoid double-counting
+  state.clickPower=1;state.idleMine=0;state.depthLevel=0;state.depthMul=1;
+  state.hatchSpeedLevel=0;state.gemChance=.02;state.breedLuck=0;
+  state.clickMul=1;state.autoClickRate=0;state.dragonMul=1;
+  state.gemBonus=0;state.offlineMultiplier=.5;state.gameSpeed=1;state.costReduction=0;
+  for(let u of UPGRADES)applyUpgrade(u);
+}
+
+// ─── BREEDING ───
+function openBreedSelect(slot){
+  let o=[];for(let d of DRAGONS)if((state.dragons[d.id]||0)>0)o.push(d);
+  for(let k in state.customDragons)if((state.customDragons[k].count||0)>0)o.push({id:k,...state.customDragons[k],custom:true});
+  if(!o.length){notify('No dragons!');return}
+  let h='<div class="modal-overlay" id="breedSelectModal"><div class="modal" style="max-width:450px"><h2>Select Dragon</h2><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:6px;margin-top:10px">';
+  for(let d of o)h+=`<div class="dragon-card" style="cursor:pointer" onclick="selectBreedParent(${slot},'${d.id}')"><div class="dragon-emoji">${d.emoji}</div><div class="dragon-name">${d.name}</div></div>`;
+  h+='</div><button class="btn btn-secondary" style="margin-top:10px" onclick="document.getElementById(\'breedSelectModal\').remove()">Cancel</button></div></div>';
+  document.body.insertAdjacentHTML('beforeend',h);
+}
+function selectBreedParent(slot,id){
+  let d=DRAGONS.find(x=>x.id===id)||state.customDragons[id];if(!d)return;
+  if(slot===1)state.breedParent1={id,...d};else state.breedParent2={id,...d};
+  document.getElementById('breedSelectModal')?.remove();renderBreed();
+}
+function clearBreedSlots(){state.breedParent1=null;state.breedParent2=null;renderBreed()}
+function startBreed(){
+  if(!state.breedParent1||!state.breedParent2||state.breeding)return;
+  state.breeding={p1:state.breedParent1,p2:state.breedParent2};state.breedStartTime=Date.now();
+  notify('🥚 Breeding started!');renderBreed();
+}
+function revealBreed(){
+  if(!state.breeding)return;let p1=state.breeding.p1,p2=state.breeding.p2;
+  let recipe=BREED_RECIPES.find(r=>(r.parents.includes(p1.id)&&r.parents.includes(p2.id))||(r.parents.includes(p2.id)&&r.parents.includes(p1.id)));
+  if(recipe&&Math.random()<(recipe.chance+state.breedLuck)){
+    if(!state.customDragons[recipe.result])state.customDragons[recipe.result]={name:recipe.name,emoji:recipe.emoji,element:recipe.element,gps:recipe.gps,desc:recipe.desc,count:0};
+    state.customDragons[recipe.result].count++;showModal(recipe.emoji,'New Dragon!',`You bred <strong>${recipe.name}</strong>!`,'Awesome!');
+  }else{
+    let f=[p1,p2][Math.floor(Math.random()*2)];
+    if(f.custom)state.customDragons[f.id].count++;else state.dragons[f.id]=(state.dragons[f.id]||0)+1;
+    showModal(f.emoji,'Offspring!',`Result: <strong>${f.name}</strong>`,'OK');
+  }
+  state.breeding=null;state.breedParent1=null;state.breedParent2=null;renderBreed();renderResources();
+}
+
+// ─── LEADERBOARD ───
+async function showLeaderboard(){
+  try{
+    const res=await authFetch(API+'/api/leaderboard');const data=await res.json();
+    let h='<div class="modal-overlay" id="lbModal"><div class="modal" style="max-width:500px"><h2>🏆 Leaderboard</h2>';
+    if(!data.length){h+='<p style="color:#777">Chưa có dữ liệu</p>'}
+    else{
+      h+='<table class="leaderboard-table"><thead><tr><th>#</th><th>Player</th><th>Gold</th><th>Dragons</th><th>Species</th></tr></thead><tbody>';
+      data.forEach((r,i)=>{
+        let rc=i<3?`rank-${i+1}`:'';let medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1;
+        h+=`<tr class="${rc}"><td>${medal}</td><td>${r.display_name||r.username}</td><td>${fmt(r.total_gold)}</td><td>${r.total_dragons}</td><td>${r.total_species}</td></tr>`;
+      });
+      h+='</tbody></table>';
+    }
+    h+='<button class="btn btn-secondary" style="margin-top:12px" onclick="document.getElementById(\'lbModal\').remove()">Đóng</button></div></div>';
+    document.body.insertAdjacentHTML('beforeend',h);
+  }catch(e){notify('⚠️ Lỗi tải BXH')}
+}
+
+// ─── TABS ───
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');activeTab=tab.dataset.tab;
+    document.getElementById('tab-'+activeTab).classList.add('active');renderAll();
+  });
+});
+
+// ─── GAME LOOP ───
+function tick(){
+  let now=Date.now(),dt=(now-state.lastTick)/1000*state.gameSpeed;state.lastTick=now;
+  let earned=getTotalGPS()*dt;state.gold+=earned;state.totalGold+=earned;
+  if(state.autoClickRate>0){let ac=state.autoClickRate*dt;let ace=ac*state.clickPower*state.clickMul*state.depthMul;state.gold+=ace;state.totalGold+=ace;state.totalClicks+=Math.floor(ac)}
+  if(Math.random()<state.gemChance*dt)state.gems+=(1+state.gemBonus);
+  renderResources();
+}
+setInterval(tick,100);
+setInterval(saveGame,30000);
+setInterval(renderAll,2000);
+</script>
+</body>
+</html>

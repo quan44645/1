@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Idle Dragon Mining Empire - Login</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐉</text></svg>">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --gold:#f7c948;--orange:#ff6b35;--dark:#1a0a2e;--mid:#16213e;--blue:#0f3460;
+  --ease-out:cubic-bezier(.16,1,.3,1);--ease-spring:cubic-bezier(.34,1.56,.64,1);
+  --shadow-glow:0 0 40px rgba(247,201,72,.15);
+}
+html{font-size:16px}
+body{
+  font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+  background:var(--dark);color:#e0e0e0;
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  overflow:hidden;position:relative;
+}
+
+/* ═══════════════ LAYERED BACKGROUND ═══════════════ */
+.bg-layer{position:fixed;inset:0;pointer-events:none}
+.bg-gradient{
+  z-index:0;
+  background:radial-gradient(ellipse 80% 60% at 50% 50%,#16213e 0%,var(--dark) 100%);
+}
+.bg-aurora{
+  z-index:1;opacity:.18;
+  background:
+    radial-gradient(ellipse 40% 50% at 20% 40%,#ff6b35 0%,transparent 70%),
+    radial-gradient(ellipse 35% 45% at 80% 60%,#4488ff 0%,transparent 70%),
+    radial-gradient(ellipse 30% 40% at 50% 80%,#8844cc 0%,transparent 70%);
+  animation:aurora 20s ease-in-out infinite alternate;
+}
+@keyframes aurora{
+  0%{transform:translate(0,0) scale(1);filter:hue-rotate(0deg)}
+  33%{transform:translate(-3%,2%) scale(1.05);filter:hue-rotate(30deg)}
+  66%{transform:translate(2%,-1%) scale(.97);filter:hue-rotate(-20deg)}
+  100%{transform:translate(-1%,1%) scale(1.02);filter:hue-rotate(15deg)}
+}
+.bg-stars{z-index:2}
+.star{
+  position:absolute;width:2px;height:2px;background:#fff;border-radius:50%;
+  animation:twinkle var(--dur) ease-in-out infinite alternate;
+  opacity:0;
+}
+@keyframes twinkle{0%{opacity:.1;transform:scale(.8)}100%{opacity:var(--bright);transform:scale(1.2)}}
+
+.bg-dragons{z-index:3}
+.bg-dragon{
+  position:absolute;font-size:60px;opacity:.06;
+  animation:floatBg var(--dur) linear infinite;
+  animation-delay:var(--delay);
+  filter:blur(1px);
+}
+@keyframes floatBg{
+  0%{transform:translateY(110vh) rotate(0deg) scale(.8);opacity:0}
+  5%{opacity:.06}
+  95%{opacity:.06}
+  100%{transform:translateY(-10vh) rotate(360deg) scale(1.1);opacity:0}
+}
+
+/* ═══════════════ PARTICLES ═══════════════ */
+.particles{z-index:4}
+.particle{
+  position:absolute;border-radius:50%;
+  animation:rise var(--dur) linear infinite;
+  animation-delay:var(--delay);
+  opacity:0;
+}
+@keyframes rise{
+  0%{opacity:0;transform:translateY(0) scale(0)}
+  8%{opacity:var(--op,.5);transform:translateY(-5vh) scale(1)}
+  92%{opacity:var(--op,.5)}
+  100%{opacity:0;transform:translateY(-105vh) scale(.3)}
+}
+
+/* ═══════════════ CONTAINER ═══════════════ */
+.container{
+  position:relative;z-index:10;width:100%;max-width:440px;padding:20px;
+  animation:containerIn .9s var(--ease-out) forwards;
+}
+@keyframes containerIn{
+  0%{opacity:0;transform:translateY(50px) scale(.92);filter:blur(8px)}
+  100%{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}
+}
+
+/* ═══════════════ CARD ═══════════════ */
+.card{
+  background:rgba(0,0,0,.45);backdrop-filter:blur(24px) saturate(1.4);
+  border:1px solid rgba(255,255,255,.08);border-radius:24px;
+  padding:44px 38px;position:relative;overflow:hidden;
+  box-shadow:0 24px 80px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.05);
+  transition:box-shadow .6s;
+}
+.card:hover{
+  box-shadow:0 24px 80px rgba(0,0,0,.6),0 0 60px rgba(247,201,72,.06),inset 0 1px 0 rgba(255,255,255,.08);
+}
+.card::before{
+  content:'';position:absolute;inset:-2px;border-radius:26px;
+  background:conic-gradient(from 180deg,transparent 0%,rgba(247,201,72,.08) 25%,transparent 50%,rgba(255,107,53,.06) 75%,transparent 100%);
+  animation:borderSpin 10s linear infinite;z-index:-1;
+}
+@keyframes borderSpin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+.card::after{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(247,201,72,.3),transparent);
+  animation:shimmerLine 4s ease-in-out infinite;
+}
+@keyframes shimmerLine{0%,100%{opacity:0;transform:translateX(-100%)}50%{opacity:1;transform:translateX(100%)}}
+
+/* ═══════════════ LOGO ═══════════════ */
+.logo{text-align:center;margin-bottom:32px}
+.logo .dragon{
+  font-size:72px;display:block;margin-bottom:12px;
+  animation:dragonFloat 4s ease-in-out infinite;
+  filter:drop-shadow(0 0 20px rgba(247,201,72,.4)) drop-shadow(0 4px 12px rgba(0,0,0,.3));
+  cursor:default;user-select:none;
+}
+@keyframes dragonFloat{
+  0%,100%{transform:translateY(0) rotate(-2deg) scale(1);filter:drop-shadow(0 0 20px rgba(247,201,72,.3))}
+  25%{transform:translateY(-8px) rotate(0deg) scale(1.04)}
+  50%{transform:translateY(-12px) rotate(2deg) scale(1.08);filter:drop-shadow(0 0 35px rgba(247,201,72,.5))}
+  75%{transform:translateY(-6px) rotate(0deg) scale(1.03)}
+}
+.logo .dragon::after{
+  content:'';position:absolute;bottom:-5px;left:50%;transform:translateX(-50%);
+  width:60px;height:8px;background:radial-gradient(ellipse,rgba(247,201,72,.3),transparent);
+  border-radius:50%;animation:dragonShadow 4s ease-in-out infinite;
+}
+@keyframes dragonShadow{
+  0%,100%{transform:translateX(-50%) scaleX(1);opacity:.3}
+  50%{transform:translateX(-50%) scaleX(1.4);opacity:.15}
+}
+.logo h1{
+  font-size:23px;font-weight:800;letter-spacing:2px;
+  background:linear-gradient(135deg,var(--orange),var(--gold),#ffe066,var(--gold),var(--orange));
+  background-size:300% 100%;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  animation:titleShine 4s ease-in-out infinite;
+}
+@keyframes titleShine{0%{background-position:0% center}100%{background-position:300% center}}
+.logo p{
+  color:#777;font-size:13px;margin-top:6px;
+  animation:fadeIn .6s .4s both;letter-spacing:.5px;
+}
+@keyframes fadeIn{0%{opacity:0;transform:translateY(6px)}100%{opacity:1;transform:translateY(0)}}
+
+/* ═══════════════ TABS ═══════════════ */
+.tabs{
+  display:flex;gap:4px;margin-bottom:24px;
+  background:rgba(255,255,255,.04);border-radius:12px;padding:4px;
+  animation:fadeIn .5s .25s both;
+}
+.tab{
+  flex:1;padding:11px;text-align:center;border-radius:9px;
+  cursor:pointer;font-size:14px;font-weight:600;
+  transition:all .3s var(--ease-out);color:#666;
+  position:relative;overflow:hidden;user-select:none;
+}
+.tab::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,var(--orange),var(--gold));
+  opacity:0;transition:opacity .3s;border-radius:9px;
+}
+.tab:hover{color:#aaa;transform:translateY(-1px)}
+.tab:hover::before{opacity:.08}
+.tab.active{color:var(--dark);font-weight:700;transform:translateY(0)}
+.tab.active::before{opacity:1}
+.tab.active span{position:relative;z-index:1}
+
+/* ═══════════════ FORMS ═══════════════ */
+.form-group{margin-bottom:16px;animation:fieldIn .5s var(--ease-out) both}
+.form-group:nth-child(1){animation-delay:.08s}
+.form-group:nth-child(2){animation-delay:.14s}
+.form-group:nth-child(3){animation-delay:.2s}
+.form-group:nth-child(4){animation-delay:.26s}
+.form-group:nth-child(5){animation-delay:.32s}
+@keyframes fieldIn{0%{opacity:0;transform:translateY(12px)}100%{opacity:1;transform:translateY(0)}}
+.form-group label{
+  display:block;font-size:11px;color:#888;margin-bottom:5px;
+  font-weight:600;text-transform:uppercase;letter-spacing:.8px;
+  transition:color .3s;
+}
+.form-group:focus-within label{color:var(--gold)}
+.form-group input{
+  width:100%;padding:13px 16px;
+  background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.08);
+  border-radius:12px;color:#e0e0e0;font-size:14px;
+  transition:all .35s var(--ease-out);outline:none;
+  font-family:inherit;
+}
+.form-group input:focus{
+  border-color:var(--gold);background:rgba(247,201,72,.04);
+  box-shadow:0 0 0 4px rgba(247,201,72,.08),0 0 20px rgba(247,201,72,.06);
+  transform:translateY(-1px);
+}
+.form-group input::placeholder{color:#444;transition:all .3s}
+.form-group input:focus::placeholder{color:#666;transform:translateX(3px);opacity:.7}
+
+/* ═══════════════ BUTTONS ═══════════════ */
+.btn{
+  width:100%;padding:15px;border:none;border-radius:12px;
+  cursor:pointer;font-weight:700;font-size:15px;
+  transition:all .3s var(--ease-out);margin-top:6px;
+  position:relative;overflow:hidden;font-family:inherit;
+  letter-spacing:.5px;
+}
+.btn-primary{
+  background:linear-gradient(135deg,var(--orange),var(--gold));
+  color:var(--dark);
+  box-shadow:0 4px 15px rgba(255,107,53,.2);
+}
+.btn-primary::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,var(--gold),#ffe066);
+  opacity:0;transition:opacity .3s;
+}
+.btn-primary:hover{
+  transform:translateY(-3px);
+  box-shadow:0 8px 30px rgba(255,107,53,.35),0 0 0 1px rgba(247,201,72,.2);
+}
+.btn-primary:hover::before{opacity:.3}
+.btn-primary:active{transform:translateY(-1px) scale(.98);transition-duration:.1s}
+.btn-primary:disabled{
+  opacity:.4;cursor:not-allowed;transform:none!important;
+  box-shadow:none!important;
+}
+.btn-primary:disabled::before{display:none}
+
+/* Ripple */
+.btn .ripple{
+  position:absolute;border-radius:50%;
+  background:rgba(255,255,255,.3);transform:scale(0);
+  animation:ripple .6s ease-out;pointer-events:none;
+}
+@keyframes ripple{to{transform:scale(4);opacity:0}}
+
+/* ═══════════════ MESSAGES ═══════════════ */
+.msg{
+  padding:12px 16px;border-radius:12px;font-size:13px;
+  margin-bottom:14px;display:none;text-align:center;
+  font-weight:500;
+}
+.msg.error{
+  display:block;
+  background:rgba(255,68,68,.1);border:1px solid rgba(255,68,68,.2);
+  color:#ff6666;animation:msgIn .35s var(--ease-out),shake .5s .1s;
+}
+.msg.success{
+  display:block;
+  background:rgba(68,204,68,.1);border:1px solid rgba(68,204,68,.2);
+  color:#66ff66;animation:msgIn .35s var(--ease-out);
+}
+.msg.loading{
+  display:block;
+  background:rgba(247,201,72,.08);border:1px solid rgba(247,201,72,.15);
+  color:var(--gold);animation:msgIn .35s var(--ease-out);
+}
+.msg.loading::after{
+  content:'';display:inline-block;width:12px;height:12px;
+  border:2px solid transparent;border-top-color:var(--gold);
+  border-radius:50%;margin-left:8px;vertical-align:middle;
+  animation:spin .6s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes msgIn{
+  0%{opacity:0;transform:translateY(-10px) scale(.96)}
+  100%{opacity:1;transform:translateY(0) scale(1)}
+}
+@keyframes shake{
+  0%,100%{transform:translateX(0)}
+  15%{transform:translateX(-8px)}
+  30%{transform:translateX(8px)}
+  45%{transform:translateX(-5px)}
+  60%{transform:translateX(5px)}
+  75%{transform:translateX(-2px)}
+}
+
+/* ═══════════════ FEATURES ═══════════════ */
+.features{
+  margin-top:24px;padding-top:24px;
+  border-top:1px solid rgba(255,255,255,.06);
+  animation:fadeIn .6s .5s both;
+}
+.features h3{font-size:12px;color:var(--gold);margin-bottom:12px;text-align:center;text-transform:uppercase;letter-spacing:2px}
+.features .list{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.features .item{
+  font-size:11px;color:#666;display:flex;align-items:center;gap:8px;
+  padding:6px 8px;border-radius:8px;
+  transition:all .3s var(--ease-out);
+  animation:featureIn .4s var(--ease-out) both;
+}
+.features .item:nth-child(1){animation-delay:.55s}
+.features .item:nth-child(2){animation-delay:.6s}
+.features .item:nth-child(3){animation-delay:.65s}
+.features .item:nth-child(4){animation-delay:.7s}
+.features .item:nth-child(5){animation-delay:.75s}
+.features .item:nth-child(6){animation-delay:.8s}
+@keyframes featureIn{0%{opacity:0;transform:translateX(-12px)}100%{opacity:1;transform:translateX(0)}}
+.features .item:hover{color:var(--gold);background:rgba(247,201,72,.04);transform:translateX(4px)}
+.features .item span{
+  font-size:16px;transition:transform .3s var(--ease-spring);
+  display:flex;align-items:center;justify-content:center;width:24px;
+}
+.features .item:hover span{transform:scale(1.3) rotate(-8deg)}
+
+.footer{text-align:center;margin-top:20px;color:#333;font-size:10px;letter-spacing:1px;animation:fadeIn .6s .9s both}
+
+/* ═══════════════ LINK ═══════════════ */
+.link{
+  display:inline-block;color:var(--gold);font-size:13px;
+  text-decoration:none;transition:all .3s;position:relative;
+}
+.link::after{
+  content:'';position:absolute;bottom:-2px;left:0;width:0;height:1px;
+  background:var(--gold);transition:width .3s var(--ease-out);
+}
+.link:hover::after{width:100%}
+.link:hover{color:#ffe066;text-shadow:0 0 10px rgba(247,201,72,.3)}
+
+/* ═══════════════ SUCCESS TRANSITION ═══════════════ */
+.page-exit{animation:pageExit .5s var(--ease-out) forwards}
+@keyframes pageExit{to{opacity:0;transform:scale(1.05);filter:blur(8px)}}
+
+/* ═══════════════ RESPONSIVE ═══════════════ */
+@media(max-width:480px){
+  .container{padding:12px}
+  .card{padding:30px 24px;border-radius:20px}
+  .logo .dragon{font-size:56px}
+  .logo h1{font-size:18px;letter-spacing:1px}
+}
+</style>
+</head>
+<body>
+
+<!-- Background layers -->
+<div class="bg-layer bg-gradient"></div>
+<div class="bg-layer bg-aurora"></div>
+<div class="bg-layer bg-stars" id="bgStars"></div>
+<div class="bg-layer bg-dragons" id="bgDragons"></div>
+<div class="bg-layer particles" id="particles"></div>
+
+<div class="container" id="mainContainer">
+  <div class="card">
+    <div class="logo">
+      <span class="dragon" id="logoDragon">🐉</span>
+      <h1>IDLE DRAGON MINING EMPIRE</h1>
+      <p>Đăng nhập để lưu tiến trình của bạn</p>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('login')"><span>Đăng Nhập</span></div>
+      <div class="tab" onclick="switchTab('register')"><span>Đăng Ký</span></div>
+    </div>
+
+    <div id="msgBox" class="msg"></div>
+
+    <!-- LOGIN FORM -->
+    <div id="loginForm">
+      <div class="form-group">
+        <label>👤 Tên đăng nhập</label>
+        <input type="text" id="loginUsername" placeholder="Nhập username..." autocomplete="username">
+      </div>
+      <div class="form-group">
+        <label>🔒 Mật khẩu</label>
+        <input type="password" id="loginPassword" placeholder="Nhập mật khẩu..." autocomplete="current-password">
+      </div>
+      <button class="btn btn-primary" onclick="doLogin(event)"><span>Đăng Nhập ⛏️</span></button>
+      <p style="text-align:center;margin-top:14px"><a href="#" onclick="showForgotPassword();return false" class="link">🔑 Quên mật khẩu?</a></p>
+    </div>
+
+    <!-- FORGOT PASSWORD FORM -->
+    <div id="forgotForm" style="display:none">
+      <p style="text-align:center;color:#888;font-size:13px;margin-bottom:18px">Nhập email để nhận link đặt lại mật khẩu</p>
+      <div class="form-group">
+        <label>📧 Email</label>
+        <input type="email" id="forgotEmail" placeholder="email@example.com" autocomplete="email">
+      </div>
+      <button class="btn btn-primary" onclick="doForgotPassword(event)"><span>Gửi Link Đặt Lại 📩</span></button>
+      <p style="text-align:center;margin-top:14px"><a href="#" onclick="switchTab('login');return false" class="link" style="color:#888">← Quay lại đăng nhập</a></p>
+    </div>
+
+    <!-- RESET PASSWORD FORM -->
+    <div id="resetForm" style="display:none">
+      <p style="text-align:center;color:#888;font-size:13px;margin-bottom:18px">Nhập mật khẩu mới cho tài khoản của bạn</p>
+      <div class="form-group">
+        <label>🔒 Mật khẩu mới</label>
+        <input type="password" id="resetPassword" placeholder="Tối thiểu 6 ký tự..." autocomplete="new-password">
+      </div>
+      <div class="form-group">
+        <label>🔒 Xác nhận mật khẩu</label>
+        <input type="password" id="resetConfirm" placeholder="Nhập lại mật khẩu..." autocomplete="new-password">
+      </div>
+      <button class="btn btn-primary" onclick="doResetPassword(event)"><span>Đặt Lại Mật Khẩu 🔒</span></button>
+    </div>
+
+    <!-- REGISTER FORM -->
+    <div id="registerForm" style="display:none">
+      <div class="form-group">
+        <label>👤 Tên đăng nhập</label>
+        <input type="text" id="regUsername" placeholder="Tối thiểu 3 ký tự..." autocomplete="username">
+      </div>
+      <div class="form-group">
+        <label>📧 Email</label>
+        <input type="email" id="regEmail" placeholder="email@example.com" autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label>🏷️ Tên hiển thị</label>
+        <input type="text" id="regDisplayName" placeholder="Tên trong game..." autocomplete="name">
+      </div>
+      <div class="form-group">
+        <label>🔒 Mật khẩu</label>
+        <input type="password" id="regPassword" placeholder="Tối thiểu 6 ký tự..." autocomplete="new-password">
+      </div>
+      <div class="form-group">
+        <label>🔒 Xác nhận mật khẩu</label>
+        <input type="password" id="regConfirm" placeholder="Nhập lại mật khẩu..." autocomplete="new-password">
+      </div>
+      <button class="btn btn-primary" onclick="doRegister(event)"><span>Tạo Tài Khoản 🐉</span></button>
+    </div>
+
+    <div class="features">
+      <h3>Tính năng tài khoản</h3>
+      <div class="list">
+        <div class="item"><span>💾</span> Lưu game tự động</div>
+        <div class="item"><span>☁️</span> Đồng bộ đám mây</div>
+        <div class="item"><span>🏆</span> Bảng xếp hạng</div>
+        <div class="item"><span>📊</span> Thống kê chi tiết</div>
+        <div class="item"><span>🐉</span> Bộ sưu tập rồng</div>
+        <div class="item"><span>🔒</span> Bảo mật cao</div>
+      </div>
+    </div>
+
+    <div class="footer">v2.0 — Database powered by SQLite</div>
+  </div>
+</div>
+
+<script>
+const API = '';
+
+// ── Stars ──
+(function(){
+  const bg=document.getElementById('bgStars');
+  for(let i=0;i<60;i++){
+    const s=document.createElement('div');s.className='star';
+    s.style.left=Math.random()*100+'%';s.style.top=Math.random()*100+'%';
+    s.style.setProperty('--dur',(2+Math.random()*4)+'s');
+    s.style.setProperty('--bright',(.3+Math.random()*.5));
+    s.style.animationDelay=Math.random()*5+'s';
+    if(Math.random()>.7){s.style.width=s.style.height='3px'}
+    bg.appendChild(s);
+  }
+})();
+
+// ── Background dragons ──
+(function(){
+  const emojis=['🐲','🐉','🦎','⚡','🔥','💧','❄️','🌑','🦅','🌟','🌪️','☠️','☀️','💎','🪐','👑','♾️','🌊','🌋','🌈'];
+  const bg=document.getElementById('bgDragons');
+  for(let i=0;i<12;i++){
+    const d=document.createElement('div');d.className='bg-dragon';
+    d.textContent=emojis[Math.floor(Math.random()*emojis.length)];
+    d.style.left=Math.random()*100+'%';
+    d.style.setProperty('--delay',(Math.random()*25)+'s');
+    d.style.setProperty('--dur',(18+Math.random()*15)+'s');
+    d.style.fontSize=(30+Math.random()*50)+'px';
+    bg.appendChild(d);
+  }
+})();
+
+// ── Particles ──
+(function(){
+  const bg=document.getElementById('particles');
+  const colors=['#f7c948','#ff6b35','#ffdd44','#cc88ff','#4488ff','#66ccaa','#ff4444'];
+  for(let i=0;i<25;i++){
+    const p=document.createElement('div');p.className='particle';
+    p.style.left=Math.random()*100+'%';p.style.bottom='-5px';
+    p.style.setProperty('--dur',(10+Math.random()*15)+'s');
+    p.style.setProperty('--delay',(Math.random()*20)+'s');
+    p.style.setProperty('--op',(.2+Math.random()*.4));
+    const size=2+Math.random()*3;
+    p.style.width=p.style.height=size+'px';
+    p.style.background=colors[Math.floor(Math.random()*colors.length)];
+    p.style.boxShadow=`0 0 ${size*2}px ${p.style.background}`;
+    bg.appendChild(p);
+  }
+})();
+
+// ── Logo dragon click easter egg ──
+document.getElementById('logoDragon').addEventListener('click',function(){
+  this.style.animation='none';
+  this.offsetHeight;
+  this.style.animation='dragonBounce .6s var(--ease-spring)';
+  const emojis=['🐲','🐉','🔥','⚡','💎','🌟','👑','♾️'];
+  this.textContent=emojis[Math.floor(Math.random()*emojis.length)];
+  setTimeout(()=>{this.style.animation='dragonFloat 4s ease-in-out infinite'},600);
+});
+
+// ── Ripple effect on buttons ──
+document.querySelectorAll('.btn').forEach(btn=>{
+  btn.addEventListener('click',function(e){
+    const r=document.createElement('span');r.className='ripple';
+    const rect=this.getBoundingClientRect();
+    const size=Math.max(rect.width,rect.height);
+    r.style.width=r.style.height=size+'px';
+    r.style.left=(e.clientX-rect.left-size/2)+'px';
+    r.style.top=(e.clientY-rect.top-size/2)+'px';
+    this.appendChild(r);setTimeout(()=>r.remove(),600);
+  });
+});
+
+// ── Check if already logged in ──
+(function(){
+  const token=localStorage.getItem('dgm_token');
+  if(token){
+    fetch(API+'/api/profile',{headers:{'Authorization':'Bearer '+token}})
+      .then(r=>{if(r.ok){
+        document.getElementById('mainContainer').classList.add('page-exit');
+        setTimeout(()=>window.location.href='/game.html',500);
+      }})
+      .catch(()=>{});
+  }
+})();
+
+// ── Tab switching ──
+let currentTab='login';
+function switchTab(tab){
+  currentTab=tab;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  if(tab==='login'||tab==='register'){
+    document.querySelector(`.tab:${tab==='login'?'first':'last'}-child`).classList.add('active');
+  }
+  const forms={login:'loginForm',register:'registerForm',forgot:'forgotForm',reset:'resetForm'};
+  for(const[key,id] of Object.entries(forms)){
+    const el=document.getElementById(id);
+    if(key===tab){el.style.display='block';el.style.animation='none';el.offsetHeight;el.style.animation='fieldIn .4s var(--ease-out) both'}
+    else{el.style.display='none'}
+  }
+  const tabsEl=document.querySelector('.tabs');
+  tabsEl.style.display=(tab==='forgot'||tab==='reset')?'none':'flex';
+  if(tab==='forgot'||tab==='reset'){tabsEl.style.animation='none'}
+  hideMsg();
+}
+function showForgotPassword(){switchTab('forgot')}
+
+function showMsg(type,text){
+  const el=document.getElementById('msgBox');
+  el.className='msg '+type;el.textContent=text;
+}
+function hideMsg(){const el=document.getElementById('msgBox');el.className='msg';el.textContent=''}
+
+// ── Auth functions ──
+async function doLogin(e){
+  const username=document.getElementById('loginUsername').value.trim();
+  const password=document.getElementById('loginPassword').value;
+  if(!username||!password){showMsg('error','Vui lòng nhập đầy đủ thông tin');return}
+  showMsg('loading','Đang đăng nhập');
+  try{
+    const res=await fetch(API+'/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password})});
+    const data=await res.json();
+    if(data.success){
+      localStorage.setItem('dgm_token',data.token);
+      localStorage.setItem('dgm_user',JSON.stringify(data.user));
+      showMsg('success','Đăng nhập thành công! Đang chuyển...');
+      document.getElementById('mainContainer').classList.add('page-exit');
+      setTimeout(()=>window.location.href='/game.html',600);
+    }else{showMsg('error',data.error||'Đăng nhập thất bại')}
+  }catch(e){showMsg('error','Không thể kết nối server')}
+}
+
+async function doRegister(e){
+  const username=document.getElementById('regUsername').value.trim();
+  const email=document.getElementById('regEmail').value.trim();
+  const displayName=document.getElementById('regDisplayName').value.trim();
+  const password=document.getElementById('regPassword').value;
+  const confirm=document.getElementById('regConfirm').value;
+  if(!username||!email||!password||!confirm){showMsg('error','Vui lòng nhập đầy đủ thông tin');return}
+  if(password!==confirm){showMsg('error','Mật khẩu xác nhận không khớp');return}
+  if(password.length<6){showMsg('error','Mật khẩu phải >= 6 ký tự');return}
+  if(username.length<3){showMsg('error','Username phải >= 3 ký tự');return}
+  showMsg('loading','Đang tạo tài khoản');
+  try{
+    const res=await fetch(API+'/api/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,email,password,display_name:displayName})});
+    const data=await res.json();
+    if(data.success){
+      localStorage.setItem('dgm_token',data.token);
+      localStorage.setItem('dgm_user',JSON.stringify(data.user));
+      showMsg('success','Đăng ký thành công! Đang chuyển...');
+      document.getElementById('mainContainer').classList.add('page-exit');
+      setTimeout(()=>window.location.href='/game.html',600);
+    }else{showMsg('error',data.error||'Đăng ký thất bại')}
+  }catch(e){showMsg('error','Không thể kết nối server')}
+}
+
+async function doForgotPassword(e){
+  const email=document.getElementById('forgotEmail').value.trim();
+  if(!email){showMsg('error','Vui lòng nhập email');return}
+  if(!email.includes('@')){showMsg('error','Email không hợp lệ');return}
+  showMsg('loading','Đang gửi email');
+  try{
+    const res=await fetch(API+'/api/forgot-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});
+    const data=await res.json();
+    if(data.success){
+      if(data.reset_link){
+        showMsg('success',data.message);
+        const linkBox=document.createElement('div');
+        linkBox.style.cssText='margin-top:10px;padding:14px;background:rgba(247,201,72,.06);border:1px solid rgba(247,201,72,.15);border-radius:10px;word-break:break-all;font-size:12px;color:var(--gold);text-align:center;animation:fieldIn .4s var(--ease-out)';
+        linkBox.innerHTML=`<a href="${data.reset_link}" style="color:var(--gold);text-decoration:underline">${data.reset_link}</a>`;
+        document.getElementById('msgBox').after(linkBox);
+      }else{showMsg('success',data.message)}
+      document.getElementById('forgotEmail').value='';
+    }else{showMsg('error',data.error||'Gửi email thất bại')}
+  }catch(e){showMsg('error','Không thể kết nối server')}
+}
+
+async function doResetPassword(e){
+  const password=document.getElementById('resetPassword').value;
+  const confirm=document.getElementById('resetConfirm').value;
+  if(!password||!confirm){showMsg('error','Vui lòng nhập đầy đủ thông tin');return}
+  if(password!==confirm){showMsg('error','Mật khẩu xác nhận không khớp');return}
+  if(password.length<6){showMsg('error','Mật khẩu phải >= 6 ký tự');return}
+  const urlParams=new URLSearchParams(window.location.search);
+  const token=urlParams.get('reset_token');
+  if(!token){showMsg('error','Token không hợp lệ');return}
+  showMsg('loading','Đang đặt lại mật khẩu');
+  try{
+    const res=await fetch(API+'/api/reset-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token,new_password:password})});
+    const data=await res.json();
+    if(data.success){
+      showMsg('success',data.message);
+      window.history.replaceState({},document.title,'/index.html');
+      setTimeout(()=>switchTab('login'),2000);
+    }else{showMsg('error',data.error||'Đặt lại mật khẩu thất bại')}
+  }catch(e){showMsg('error','Không thể kết nối server')}
+}
+
+// ── Auto-detect reset token ──
+(function(){
+  const urlParams=new URLSearchParams(window.location.search);
+  if(urlParams.get('reset_token'))switchTab('reset');
+})();
+
+// ── Enter key ──
+document.addEventListener('keydown',e=>{
+  if(e.key==='Enter'){
+    if(document.getElementById('loginForm').style.display!=='none')doLogin();
+    else if(document.getElementById('registerForm').style.display!=='none')doRegister();
+    else if(document.getElementById('forgotForm').style.display!=='none')doForgotPassword();
+    else if(document.getElementById('resetForm').style.display!=='none')doResetPassword();
+  }
+});
+</script>
+</body>
+</html>
